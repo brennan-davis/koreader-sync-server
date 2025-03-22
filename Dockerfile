@@ -86,4 +86,4 @@ RUN chmod +x /etc/service/koreader-sync-server/run
 VOLUME ["/var/log/redis", "/var/lib/redis"]
 
 CMD ["/sbin/my_init"]
-EXPOSE 7200
+EXPOSE 8080
