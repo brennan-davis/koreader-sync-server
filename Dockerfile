@@ -34,7 +34,7 @@ RUN apt-get update \
         libreadline-dev libncurses5-dev libpcre3-dev libssl-dev \
         build-essential git openssl \
         luarocks unzip redis-server \
-        zlib1g-dev curl \
+        zlib1g-dev curl supervisor \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ARG OPENRESTY_VER=1.21.4.1
@@ -72,8 +72,14 @@ RUN echo -n "#!/bin/sh\nexec redis-server /app/koreader-sync-server/config/redis
         /etc/service/redis-server/run
 RUN chmod +x /etc/service/redis-server/run
 
+# Create supervisord config
+RUN mkdir -p /etc/supervisor/conf.d
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # run gin in production mode
-ENV GIN_ENV production
+ENV GIN_ENV=production \
+    GIN_PORT=8080 \
+    PORT=8080
 
 # ensure nginx is not daemonizing
 RUN echo "daemon off;" >> koreader-sync-server/config/nginx.conf
@@ -89,5 +95,6 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 
 VOLUME ["/var/log/redis", "/var/lib/redis"]
 
-CMD ["/sbin/my_init"]
+# Use supervisor to manage processes
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 EXPOSE 8080
