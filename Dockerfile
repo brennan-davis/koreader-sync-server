@@ -77,13 +77,13 @@ RUN chmod +x /etc/service/redis-server/run
 # run gin in production mode
 ENV GIN_ENV production
 
-# run gin in foreground with GIN_PORT=8080
-RUN echo -n "#!/bin/sh\ncd /app/koreader-sync-server\nexport GIN_PORT=8080\nexec gin start" > \
-        /etc/service/koreader-sync-server/run
-RUN chmod +x /etc/service/koreader-sync-server/run
-
 # ensure nginx is not daemonizing
 RUN echo "daemon off;" >> koreader-sync-server/config/nginx.conf
+
+# create koreader-sync-server service directory and script
+RUN mkdir -p /etc/service/koreader-sync-server && \
+    echo -e "#!/bin/sh\ncd /app/koreader-sync-server\nexport GIN_PORT=8080\nexec gin start" > /etc/service/koreader-sync-server/run && \
+    chmod +x /etc/service/koreader-sync-server/run
 
 VOLUME ["/var/log/redis", "/var/lib/redis"]
 
