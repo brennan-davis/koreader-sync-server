@@ -20,7 +20,7 @@ Settings.test = {
 
 Settings.production = {
     code_cache = true,
-    port = 7200,
+    port = 8080,
     expose_api_console = false
 }
 

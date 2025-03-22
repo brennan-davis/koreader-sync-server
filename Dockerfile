@@ -34,7 +34,7 @@ RUN apt-get update \
         libreadline-dev libncurses5-dev libpcre3-dev libssl-dev \
         build-essential git openssl \
         luarocks unzip redis-server \
-        zlib1g-dev \
+        zlib1g-dev curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ARG OPENRESTY_VER=1.21.4.1
@@ -50,8 +50,6 @@ RUN wget "http://openresty.org/download/openresty-${OPENRESTY_VER}.tar.gz" \
             && rm -rf openresty-${OPENRESTY_VER} openresty-${OPENRESTY_VER}.tar.gz /tmp/*
 
 RUN mkdir -p /etc/nginx/ssl
-RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj "/"
 
 # libssl.* are in /usr/lib/x86_64-linux-gnu on Travis Ubuntu precise
 RUN luarocks install --verbose luasocket \
@@ -84,6 +82,10 @@ RUN echo "daemon off;" >> koreader-sync-server/config/nginx.conf
 RUN mkdir -p /etc/service/koreader-sync-server && \
     echo -e "#!/bin/sh\ncd /app/koreader-sync-server\nexport GIN_PORT=8080\nexec gin start" > /etc/service/koreader-sync-server/run && \
     chmod +x /etc/service/koreader-sync-server/run
+
+# Add healthcheck endpoint
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/healthcheck || exit 1
 
 VOLUME ["/var/log/redis", "/var/lib/redis"]
 
